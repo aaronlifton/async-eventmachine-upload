@@ -1,2 +1,4 @@
 sinatra
 erubis
+eventmachine
+async_sinatra

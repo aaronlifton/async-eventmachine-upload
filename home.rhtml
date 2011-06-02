@@ -1,5 +1,55 @@
-<ul>
-<% for i in @items %>
-	<li><%= i %></li>
-<% end %>
-</ul>
+<html>
+<head>
+	<title>Soundcloud Upload</title>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+</head>
+<body>
+	<div id="header">
+		<h1>Upload a file</h1>
+		<p>Choose a file and then click upload.</p>
+	</div>
+	<div id="progress" style="border:1px solid #ccc;padding:5px;">Status:<span class="percent">0</span>%</div>
+	<div id="file_info"></div>
+	<iframe id="upload_frame" name="upload_frame" src="about:blank" style="display:none;"></iframe>
+	<form id="upload_form" target="upload_frame" action="/upload" method="post" enctype="multipart/form-data">
+		<input type="file" id="file" name="file">
+		<input type="submit" id="file_upload" value="Upload">
+	</form>
+	<form id="description_form" method="post">
+		<textarea name="description"></textarea>
+		<input type="submit" value="Save">
+	</form>
+	<script type="text/javascript">
+	$(document).ready(function() {
+		$("#upload_form").attr("target","upload_frame");
+		current_progress = 0;
+		$("#upload_form").submit(function() {
+			update_progress();
+		});
+		$("#upload_form #file").change(function() {
+			$("#file_upload").click().attr("enabled",false);
+		});
+		
+		function update_progress() {
+			data = $("#upload_frame").contents().find("html body pre").html();
+			if (data != null) {
+				var progress = parseInt(data.substr(data.length-6));
+				if (progress >= 100) { display_file_info(); clearInterval(progress_check); }
+				if (progress > current_progress) {
+					$("#progress .percent").html(progress);
+					current_progress = progress;
+				}
+			}
+		};
+		progress_check = setInterval(update_progress, 2000);
+		
+		function display_file_info() {
+			$.getJSON('/file_info.json', function(data) {
+				$("#file_info").html("You uploaded " + data.filename + " to " + data.filepath);
+			});
+		}
+	});
+	</script>
+</body>
+</html>
+
