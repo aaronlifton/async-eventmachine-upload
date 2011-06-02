@@ -42,7 +42,7 @@ post '/upload' do
   EM.next_tick { env['async.callback'].call [200, {'Content-Type' => 'text/plain'}, @upload] }
   total = tmpfile.size
   path = File.join(Dir.pwd,"uploads", name)
-  blocksize = 100 #65536
+  blocksize = 65536 #65536/100
   save_file = proc {
     while block = tmpfile.read(blocksize)
       File.open(path, "ab") { |f|
