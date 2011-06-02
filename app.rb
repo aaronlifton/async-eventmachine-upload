@@ -1,21 +1,9 @@
 require 'sinatra'
 require 'erubis'
-require 'dm-core'
 require 'json'
 require 'eventmachine'
 
 use Rack::Session::Pool, :expire_after => 2592000
-
-class Upload
-  attr_accessor :progress, :file, :id
-  
-  def initialize(progress,file)
-    @progress = progress
-    @file = file || Hash.new
-    $uploads << self
-    @id = $uploads.size
-  end
-end
 
 class UploadStream
   include EventMachine::Deferrable
@@ -40,20 +28,9 @@ class UploadStream
   end
 end
 
-get '/stream' do
-  @upload = UploadStream.new(0)
-  EventMachine.next_tick do
-    request.env['async.callback'].call [
-      200, {'Content-Type' => 'text/event-stream'},
-      @upload ]
-  end
-  [-1, {}, []]
-end
-
 get '/' do
   eruby = Erubis::Eruby.new(File.read('home.rhtml'))
-  items = ['foo', 'bar', 'baz']
-  return eruby.evaluate(:items => items)
+  eruby.evaluate()
 end
 
 post '/upload' do
@@ -65,17 +42,16 @@ post '/upload' do
   EM.next_tick { env['async.callback'].call [200, {'Content-Type' => 'text/plain'}, @upload] }
   total = tmpfile.size
   path = File.join(Dir.pwd,"uploads", name)
-  blocksize = 100
+  blocksize = 100 #65536
   save_file = proc {
-    while block = tmpfile.read(blocksize)#65536
-        #t = Thread.new do
-          File.open(path, "ab") { |f|
-            f.write(block)
-            @upload.progress += (((blocksize.to_f)/total.to_f))*100
-            EM.next_tick do
-              @upload.call @upload.format_progress
-            end
-          }
+    while block = tmpfile.read(blocksize)
+      File.open(path, "ab") { |f|
+        f.write(block)
+        @upload.progress += (((blocksize.to_f)/total.to_f))*100
+        EM.next_tick do
+          @upload.call @upload.format_progress
+        end
+      }
     end
   }
   callback = proc { |result|
@@ -85,15 +61,7 @@ post '/upload' do
   }
   EM.defer(save_file,callback)
 
-  
   [-1, {}, []].freeze
-  
-  #  unless params[:file] && (tmpfile = params[:file][:tempfile]) && (name = params[:file][:filename])
-  #    redirect '/'
-  #  end
-  #  File.open(File.join(Dir.pwd,"uploads", name), "wb") { |f| f.write(tmpfile.read) }
-  #  "sucess"
-  #end
 end
 
 get '/file_info.json' do
