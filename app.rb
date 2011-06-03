@@ -24,6 +24,7 @@ class UploadStream
   end
 
   def format_progress
+      @progress = 100 if @progress > 100
       return "#{@progress.round.to_s}%\n\n"
   end
 end
@@ -42,7 +43,7 @@ post '/upload' do
   EM.next_tick { env['async.callback'].call [200, {'Content-Type' => 'text/plain'}, @upload] }
   total = tmpfile.size
   path = File.join(Dir.pwd,"uploads", name)
-  blocksize = 65536 #65536/100
+  blocksize = 65536 #10-100 for testing
   save_file = proc {
     while block = tmpfile.read(blocksize)
       File.open(path, "ab") { |f|
@@ -55,6 +56,7 @@ post '/upload' do
     end
   }
   callback = proc { |result|
+    @upload.call @upload.format_progress
     @upload.succeed
     session[:filename] = name
     session[:filepath] = path
