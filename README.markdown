@@ -15,4 +15,4 @@ I was able to achieve a fully asynchronous file upload except for the initial fo
 3. ruby -rubygems app.rb
 4. Profit ([http://0.0.0.0:4567](http://0.0.0.0:4567))
 
-View online: [http://blazing-stream-898.heroku.com](http://blazing-stream-898.heroku.com/) (Note: because it's hosted on heroku, the file is only uploaded to a temporary folder, so you can view the progress of the upload, but you can't actually view the file uploaded.
+View online: [http://blazing-stream-898.heroku.com](http://blazing-stream-898.heroku.com/) (Note: because it's hosted on heroku, the file is only uploaded to a temporary folder, so you can view the progress of the upload, but you can't actually view the file uploaded. Because the file usually no longer exists when the upload is finished, you will unfortunately see the message "You uploaded null to null".
